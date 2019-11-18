@@ -465,6 +465,10 @@ public class NewBoostFlutterActivity extends Activity
         // No-op. Hook for subclasses.
     }
 
+    @Override
+    public void cleanUpFlutterEngine(FlutterEngine flutterEngine) {
+        // No-op. Hook for subclasses.
+    }
 
     @Override
     public boolean shouldAttachEngineToActivity() {

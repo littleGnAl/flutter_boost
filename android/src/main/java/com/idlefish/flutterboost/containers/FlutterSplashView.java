@@ -17,7 +17,7 @@ import io.flutter.Log;
 import io.flutter.embedding.android.FlutterView;
 import io.flutter.embedding.android.SplashScreen;
 import io.flutter.embedding.engine.FlutterEngine;
-import io.flutter.embedding.engine.renderer.OnFirstFrameRenderedListener;
+import io.flutter.embedding.engine.renderer.FlutterUiDisplayListener;
 
 import java.util.Date;
 
@@ -59,10 +59,10 @@ public class FlutterSplashView extends FrameLayout {
     };
 
     @NonNull
-    private final OnFirstFrameRenderedListener onFirstFrameRenderedListener = new OnFirstFrameRenderedListener() {
+    private final FlutterUiDisplayListener onFirstFrameRenderedListener = new FlutterUiDisplayListener() {
         int i=0;
         @Override
-        public void onFirstFrameRendered() {
+        public void onFlutterUiDisplayed() {
 
             if(NewFlutterBoost.instance().platform().whenEngineStart()== NewFlutterBoost.ConfigBuilder.FLUTTER_ACTIVITY_CREATED){
                 long now=new Date().getTime();
@@ -78,7 +78,7 @@ public class FlutterSplashView extends FrameLayout {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        onFirstFrameRenderedListener.onFirstFrameRendered();
+                        onFirstFrameRenderedListener.onFlutterUiDisplayed();
                     }
                 }, 200);
 
@@ -88,11 +88,10 @@ public class FlutterSplashView extends FrameLayout {
                     transitionToFlutter();
                 }
             }
+        }
 
-
-
-
-
+        @Override
+        public void onFlutterUiNoLongerDisplayed() {
 
         }
     };

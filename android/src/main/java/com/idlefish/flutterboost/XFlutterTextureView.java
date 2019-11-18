@@ -2,27 +2,30 @@ package com.idlefish.flutterboost;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.Surface;
 import android.view.TextureView;
-import io.flutter.Log;
-import io.flutter.embedding.engine.renderer.FlutterRenderer;
-import io.flutter.embedding.engine.renderer.OnFirstFrameRenderedListener;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class XFlutterTextureView extends TextureView implements FlutterRenderer.RenderSurface {
+import io.flutter.Log;
+import io.flutter.embedding.engine.renderer.FlutterRenderer;
+import io.flutter.embedding.engine.renderer.FlutterUiDisplayListener;
+import io.flutter.embedding.engine.renderer.RenderSurface;
+
+public class XFlutterTextureView extends TextureView implements RenderSurface {
     private static final String TAG = "XFlutterTextureView";
     private boolean isSurfaceAvailableForRendering;
     private boolean isAttachedToFlutterRenderer;
     @Nullable
     private FlutterRenderer flutterRenderer;
     @NonNull
-    private Set<OnFirstFrameRenderedListener> onFirstFrameRenderedListeners;
+    private Set<FlutterUiDisplayListener> onFlutterUiDisplayListeners;
     private final SurfaceTextureListener surfaceTextureListener;
 
     public XFlutterTextureView(@NonNull Context context) {
@@ -33,7 +36,7 @@ public class XFlutterTextureView extends TextureView implements FlutterRenderer.
         super(context, attrs);
         this.isSurfaceAvailableForRendering = false;
         this.isAttachedToFlutterRenderer = false;
-        this.onFirstFrameRenderedListeners = new HashSet();
+        this.onFlutterUiDisplayListeners = new HashSet<>();
         this.surfaceTextureListener = new SurfaceTextureListener() {
             public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
                 Log.v("FlutterTextureView", "SurfaceTextureListener.onSurfaceTextureAvailable()");
@@ -76,7 +79,7 @@ public class XFlutterTextureView extends TextureView implements FlutterRenderer.
         Log.v("FlutterTextureView", "Attaching to FlutterRenderer.");
         if (this.flutterRenderer != null) {
             Log.v("FlutterTextureView", "Already connected to a FlutterRenderer. Detaching from old one and attaching to new one.");
-            this.flutterRenderer.detachFromRenderSurface();
+            this.flutterRenderer.stopRenderingToSurface();
         }
 
         this.flutterRenderer = flutterRenderer;
@@ -106,7 +109,8 @@ public class XFlutterTextureView extends TextureView implements FlutterRenderer.
     private void connectSurfaceToRenderer() {
         if (this.flutterRenderer != null && this.getSurfaceTexture() != null) {
             Surface surface= new Surface(this.getSurfaceTexture());
-            this.flutterRenderer.surfaceCreated(surface);
+//            this.flutterRenderer.surfaceCreated(surface);
+            flutterRenderer.startRenderingToSurface(new Surface(getSurfaceTexture()));
             surface.release();
         } else {
             throw new IllegalStateException("connectSurfaceToRenderer() should only be called when flutterRenderer and getSurfaceTexture() are non-null.");
@@ -126,26 +130,33 @@ public class XFlutterTextureView extends TextureView implements FlutterRenderer.
         if (this.flutterRenderer == null) {
             throw new IllegalStateException("disconnectSurfaceFromRenderer() should only be called when flutterRenderer is non-null.");
         } else {
-            this.flutterRenderer.surfaceDestroyed();
+//            this.flutterRenderer.surfaceDestroyed();
+            flutterRenderer.stopRenderingToSurface();
         }
     }
 
-    public void addOnFirstFrameRenderedListener(@NonNull OnFirstFrameRenderedListener listener) {
-        this.onFirstFrameRenderedListeners.add(listener);
+    public void addOnFirstFrameRenderedListener(@NonNull FlutterUiDisplayListener listener) {
+        this.onFlutterUiDisplayListeners.add(listener);
     }
 
-    public void removeOnFirstFrameRenderedListener(@NonNull OnFirstFrameRenderedListener listener) {
-        this.onFirstFrameRenderedListeners.remove(listener);
+    public void removeOnFirstFrameRenderedListener(@NonNull FlutterUiDisplayListener listener) {
+        this.onFlutterUiDisplayListeners.remove(listener);
     }
 
     public void onFirstFrameRendered() {
         Log.v("FlutterTextureView", "onFirstFrameRendered()");
-        Iterator var1 = this.onFirstFrameRenderedListeners.iterator();
+        Iterator var1 = this.onFlutterUiDisplayListeners.iterator();
 
         while(var1.hasNext()) {
-            OnFirstFrameRenderedListener listener = (OnFirstFrameRenderedListener)var1.next();
-            listener.onFirstFrameRendered();
+            FlutterUiDisplayListener listener = (FlutterUiDisplayListener)var1.next();
+            listener.onFlutterUiDisplayed();
         }
 
+    }
+
+    @Nullable
+    @Override
+    public FlutterRenderer getAttachedRenderer() {
+        return flutterRenderer;
     }
 }
