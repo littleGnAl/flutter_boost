@@ -27,6 +27,8 @@ public abstract class Platform {
 
     public NewFlutterBoost.BoostLifecycleListener lifecycleListener;
 
+    public NewFlutterBoost.BoostPluginRegistrant boostPluginRegistrant;
+
     public void closeContainer(IContainerRecord record, Map<String, Object> result, Map<String, Object> exts) {
         if (record == null) return;
 

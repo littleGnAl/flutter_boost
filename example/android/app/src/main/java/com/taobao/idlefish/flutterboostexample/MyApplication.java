@@ -4,13 +4,19 @@ import android.app.Application;
 import android.content.Context;
 
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.idlefish.flutterboost.*;
 
 import java.util.Map;
 
 import com.idlefish.flutterboost.interfaces.INativeRouter;
 import io.flutter.embedding.android.FlutterView;
+import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.PluginRegistry;
+import io.flutter.plugins.GeneratedPluginRegistrant;
 
 public class MyApplication extends Application {
 
@@ -46,12 +52,26 @@ public class MyApplication extends Application {
 
             }
         };
+
+        NewFlutterBoost.BoostPluginRegistrant boostPluginRegistrant = new NewFlutterBoost.BoostPluginRegistrant() {
+            @Override
+            public void registerWith(PluginRegistry registry) {
+                GeneratedPluginRegistrant.registerWith(registry);
+            }
+
+            @Override
+            public void registerWith(@NonNull FlutterEngine flutterEngine) {
+
+            }
+        };
+
         Platform platform= new NewFlutterBoost
                 .ConfigBuilder(this,router)
                 .isDebug(true)
                 .whenEngineStart(NewFlutterBoost.ConfigBuilder.ANY_ACTIVITY_CREATED)
                 .renderMode(FlutterView.RenderMode.texture)
                 .lifecycleListener(lifecycleListener)
+                .boostPluginRegistrant(boostPluginRegistrant)
                 .build();
 
         NewFlutterBoost.instance().init(platform);

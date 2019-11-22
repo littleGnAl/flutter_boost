@@ -202,6 +202,8 @@ public class NewFlutterBoost {
 
         private  BoostLifecycleListener lifecycleListener;
 
+        private BoostPluginRegistrant boostPluginRegistrant;
+
         public ConfigBuilder(Application app, INativeRouter router) {
             this.router = router;
             this.mApp = app;
@@ -240,6 +242,12 @@ public class NewFlutterBoost {
             this.lifecycleListener = lifecycleListener;
             return this;
         }
+
+        public ConfigBuilder boostPluginRegistrant(BoostPluginRegistrant boostPluginRegistrant) {
+            this.boostPluginRegistrant = boostPluginRegistrant;
+            return this;
+        }
+
         public Platform build() {
 
             Platform platform = new Platform() {
@@ -278,6 +286,7 @@ public class NewFlutterBoost {
             };
 
             platform.lifecycleListener=this.lifecycleListener;
+            platform.boostPluginRegistrant = this.boostPluginRegistrant;
 
             return platform;
 
@@ -325,12 +334,17 @@ public class NewFlutterBoost {
     }
 
     private void registerPlugins() {
-        try {
-            Class clz = Class.forName("io.flutter.plugins.GeneratedPluginRegistrant");
-            Method method = clz.getDeclaredMethod("registerWith", PluginRegistry.class);
-            method.invoke(null, mRegistry);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        if (mPlatform.boostPluginRegistrant != null) {
+            Debuger.log("Register the plugins manually");
+            mPlatform.boostPluginRegistrant.registerWith(mRegistry);
+        } else {
+            try {
+                Class clz = Class.forName("io.flutter.plugins.GeneratedPluginRegistrant");
+                Method method = clz.getMethod("registerWith", PluginRegistry.class);
+                method.invoke(null, mRegistry);
+            } catch (Throwable t) {
+                throw new RuntimeException(t);
+            }
         }
 
         if(mPlatform.lifecycleListener!=null){
@@ -362,6 +376,11 @@ public class NewFlutterBoost {
         void onEngineCreated();
         void onPluginsRegistered();
         void onEngineDestroy();
+    }
+
+    public interface BoostPluginRegistrant {
+        void registerWith(PluginRegistry registry);
+        void registerWith(@NonNull FlutterEngine flutterEngine);
     }
 
 }
