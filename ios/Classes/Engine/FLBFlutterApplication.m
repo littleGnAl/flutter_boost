@@ -156,16 +156,18 @@
          exts:(NSDictionary *)exts
    completion:(void (^)(BOOL))completion
 {
+    /// zhuozhao, 修改结果回调时机
     [self.platform close:uniqueId
                   result:resultData
                     exts:exts
-              completion:completion];
-    
-    if(_pageResultCallbacks[uniqueId]){
-        void (^cb)(NSDictionary *) = _pageResultCallbacks[uniqueId];
-        cb(resultData);
-        [_pageResultCallbacks removeObjectForKey:uniqueId];
-    }
+              completion:^(BOOL result){
+        !completion ?: completion(result);
+        if(_pageResultCallbacks[uniqueId]){
+            void (^cb)(NSDictionary *) = _pageResultCallbacks[uniqueId];
+            cb(resultData);
+            [_pageResultCallbacks removeObjectForKey:uniqueId];
+        }
+    }];
 }
 
 - (void)open:(NSString *)url
